@@ -1,3 +1,6 @@
 [submodule "PKHeX"]
 	path = PKHeX
 	url = https://github.com/kwsch/PKHeX.git
+[submodule "serenity"]
+	path = serenity
+	url = http://git.zeusteam.dev/arcticsys/Serenity.git

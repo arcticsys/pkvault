@@ -1,0 +1,143 @@
+@import "tailwindcss/preflight";
+@tailwind utilities;
+
+@font-face {
+    font-family: 'JetBrainsMono NFM';
+    src: local('JetBrainsMono NFM'),
+         url('/fonts/JetBrainsMonoNerdFont-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
+}
+
+body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: 'JetBrainsMono NFM', monospace;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #555555 #0a0a0a;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--foreground);
+    border-radius: 10px;
+    border: 2px solid var(--background);
+}
+
+.error {
+    color: #ff0000;
+}
+
+.success {
+    color: #00ff00;
+}
+
+h1 {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+button {
+    display: block;
+    padding: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 5px;
+    border: 1px solid #AAA;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+button:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+input {
+    display: block;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #AAA;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+input:hover {
+    outline: none;
+    border-color: #2563eb;
+}
+
+.chip {
+    display: inline-block;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 30px;
+    border: 0px;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    color: white;
+    cursor: pointer;
+}
+
+.chip:hover {
+    background-color: hsl(220, 60%, 58%);
+}
+
+.upload {
+    display: block;
+    padding: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 5px;
+    border: 1px solid #AAA;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.file {
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #888;
+    background-color: #2a2a2a;
+    color: var(--foreground);
+    text-align: left;
+    margin-top: 2.5px;
+    margin-bottom: 2.5px;
+}

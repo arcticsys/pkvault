@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./data/data.db"
+}
+
+model Pokemon {
+  id          String          @id @unique @default(uuid())
+  data        Bytes
+  generation  Int
+  speciesId   Int
+  speciesName String
+  nickname    String?
+  level       Int
+  saveId      String
+  extractedAt DateTime
+  save        Save            @relation(fields: [saveId, extractedAt], references: [id, extractedAt], name: "originalSave")
+  group       PokemonGroups[] @relation("pokemonGroup")
+}
+
+model Save {
+  id          String    @id @unique @default(uuid())
+  data        Bytes
+  filePath    String    @unique
+  extractedAt DateTime  @default(now())
+  pokemon     Pokemon[] @relation("originalSave")
+
+  @@unique([id, extractedAt])
+}
+
+model PokemonGroups {
+  id      String    @id @unique @default(uuid())
+  pokemon Pokemon[] @relation("pokemonGroup")
+}
