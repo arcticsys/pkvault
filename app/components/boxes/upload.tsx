@@ -679,7 +679,7 @@ export default function Upload() {
                                         setfiles(properfiles);
                                         console.log("Parsed files:", properfiles);
                                     } else {
-                                        alert("Could not parse the provided output. Please ensure it is from `dir` or `stat`.");
+                                        alert("Could not parse the provided output. Please ensure it is from the provided command.");
                                     }
                                 }
                             }
