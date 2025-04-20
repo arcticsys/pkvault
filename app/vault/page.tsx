@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react";
 import Failed from "../components/error";
 import Loading from "../components/loading";
-//import { isFailedContent, sendrequest } from "../lib";
 import { sendrequest } from "../lib";
 
 export default function Vault() {
     const [isLoading, setIsLoading] = useState(true);
-    //const [isFailed, setIsFailed] = useState<isFailedContent>({ status: false });
     const [isFailed, setIsFailed] = useState({ status: false, message: "" });
     const [items, setItems] = useState<any[]>([]);
 

@@ -3,14 +3,11 @@
 import { useState, useEffect } from "react";
 import Failed from "./components/error";
 import Loading from "./components/loading";
-//import { isFailedContent, ApiDataOverviewResponse, sendrequest } from "./lib";
 import { sendrequest } from "./lib";
 
 export default function Home() {
     const [isLoading, setIsLoading] = useState(true);
-    //const [isFailed, setIsFailed] = useState<isFailedContent>({ status: false });
     const [isFailed, setIsFailed] = useState({ status: false, message: "" });
-    //const [Content, setContent] = useState<ApiDataOverviewResponse>({ count: 0 });
     const [Content, setContent] = useState({ count: 0 });
 
     useEffect(() => {

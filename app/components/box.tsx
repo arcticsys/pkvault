@@ -92,6 +92,15 @@ export const BoxManager = {
             });
         }
     },
+    close: () => {
+        const boxes = document.querySelectorAll('#box');
+        if (boxes.length > 0) {
+            boxes.forEach((box) => {
+                const closeEvent = new Event('closeBox');
+                document.dispatchEvent(closeEvent);
+            });
+        }
+    }
 };
 
 const Box: React.FC<BoxProps> = ({ fetchComponent }) => {

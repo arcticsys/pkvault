@@ -6,242 +6,7 @@ import { TypeFileExtended, opensocket } from '@/app/lib';
 import { createRoot } from 'react-dom/client';
 import { getgencolour, getuploadtypecolour } from '../colours';
 
-/*function singlefilechipmenu(generation: number, setgeneration: React.Dispatch<React.SetStateAction<number>>) {
-    return (
-        <>
-            <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', padding: '8px', whiteSpace: 'nowrap' }}>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 1 ? 'rgb(132, 171, 68)' : 'rgb(172, 211, 108)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(1)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 1) {
-                            e.currentTarget.style.backgroundColor = 'rgb(152, 191, 88)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 1) {
-                            e.currentTarget.style.backgroundColor = 'rgb(152, 191, 88)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 1) {
-                            e.currentTarget.style.backgroundColor = 'rgb(172, 211, 108)';
-                        }
-                    }}
-                >
-                    Gen1 (R/B/Y)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 2 ? 'rgb(180, 174, 79)' : 'rgb(220, 214, 119)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(2)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 2) {
-                            e.currentTarget.style.backgroundColor = 'rgb(200, 194, 99)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 2) {
-                            e.currentTarget.style.backgroundColor = 'rgb(200, 194, 99)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 2) {
-                            e.currentTarget.style.backgroundColor = 'rgb(220, 214, 119)';
-                        }
-                    }}
-                >
-                    Gen2 (G/S/C)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 3 ? 'rgb(116, 175, 160)' : 'rgb(156, 215, 200)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(3)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 3) {
-                            e.currentTarget.style.backgroundColor = 'rgb(136, 195, 180)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 3) {
-                            e.currentTarget.style.backgroundColor = 'rgb(136, 195, 180)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 3) {
-                            e.currentTarget.style.backgroundColor = 'rgb(156, 215, 200)';
-                        }
-                    }}
-                >
-                    Gen3 (R/S/E/FR/LG)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 4 ? 'rgb(143, 123, 155)' : 'rgb(183, 163, 195)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(4)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 4) {
-                            e.currentTarget.style.backgroundColor = 'rgb(163, 143, 175)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 4) {
-                            e.currentTarget.style.backgroundColor = 'rgb(163, 143, 175)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 4) {
-                            e.currentTarget.style.backgroundColor = 'rgb(183, 163, 195)';
-                        }
-                    }}
-                >
-                    Gen4 (D/P/Pl/HG/SS)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 5 ? 'rgb(119, 162, 183)' : 'rgb(159, 202, 223)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(5)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 5) {
-                            e.currentTarget.style.backgroundColor = 'rgb(139, 182, 203)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 5) {
-                            e.currentTarget.style.backgroundColor = 'rgb(139, 182, 203)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 5) {
-                            e.currentTarget.style.backgroundColor = 'rgb(159, 202, 223)';
-                        }
-                    }}
-                >
-                    Gen5 (B/W/B2/W2)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 6 ? 'rgb(181, 56, 100)' : 'rgb(221, 96, 140)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(6)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 6) {
-                            e.currentTarget.style.backgroundColor = 'rgb(201, 76, 120)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 6) {
-                            e.currentTarget.style.backgroundColor = 'rgb(201, 76, 120)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 6) {
-                            e.currentTarget.style.backgroundColor = 'rgb(221, 96, 140)';
-                        }
-                    }}
-                >
-                    Gen6 (X/Y/OR/AS)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 7 ? 'rgb(192, 108, 91)' : 'rgb(232, 148, 131)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(7)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 7) {
-                            e.currentTarget.style.backgroundColor = 'rgb(212, 128, 111)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 7) {
-                            e.currentTarget.style.backgroundColor = 'rgb(212, 128, 111)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 7) {
-                            e.currentTarget.style.backgroundColor = 'rgb(232, 148, 131)';
-                        }
-                    }}
-                >
-                    Gen7 (S/M/US/UM)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 8 ? 'rgb(161, 85, 152)' : 'rgb(201, 125, 192)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(8)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 8) {
-                            e.currentTarget.style.backgroundColor = 'rgb(181, 105, 172)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 8) {
-                            e.currentTarget.style.backgroundColor = 'rgb(181, 105, 172)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 8) {
-                            e.currentTarget.style.backgroundColor = 'rgb(201, 125, 192)';
-                        }
-                    }}
-                >
-                    Gen8 (Sw/Sh/BD/SP)
-                </button>
-                <button
-                    className="chip"
-                    style={{
-                        backgroundColor: generation === 9 ? 'rgb(195, 152, 89)' : 'rgb(235, 192, 129)',
-                        color: '#000000',
-                    }}
-                    onClick={() => setgeneration(9)}
-                    onMouseEnter={(e) => {
-                        if (generation !== 9) {
-                            e.currentTarget.style.backgroundColor = 'rgb(215, 172, 109)';
-                        }
-                    }}
-                    onMouseMove={(e) => {
-                        if (generation !== 9) {
-                            e.currentTarget.style.backgroundColor = 'rgb(215, 172, 109)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (generation !== 9) {
-                            e.currentTarget.style.backgroundColor = 'rgb(235, 192, 129)';
-                        }
-                    }}
-                >
-                    Gen9 (S/V)
-                </button>
-            </div>
-            <div>Selected generation: {generation}</div>
-        </>
-    );
-}*/
-
-function filescomp(files: TypeFileExtended[], setfiles: React.Dispatch<React.SetStateAction<File[]>>) {
+function filescomp(files: TypeFileExtended[], setfiles: React.Dispatch<React.SetStateAction<File[]>>, uploadlocked: boolean) {
     return (
         <div>
             {files.slice().sort((a, b) => a.name.localeCompare(b.name)).map((file, index) => (
@@ -278,24 +43,26 @@ function filescomp(files: TypeFileExtended[], setfiles: React.Dispatch<React.Set
                             </>
                         )}
                     </span>
-                    <button
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '0px',
-                            margin: '0px',
-                        }}
-                        onClick={() => {
-                            setfiles((prevFiles: File[]) => prevFiles.filter((_, i: number) => i !== index));
-                        }}
-                    >
-                        ✖
-                    </button>
+                    {!uploadlocked && (
+                        <button
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                fontSize: '16px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '0px',
+                                margin: '0px',
+                            }}
+                            onClick={() => {
+                                setfiles((prevFiles: File[]) => prevFiles.filter((_, i: number) => i !== index));
+                            }}
+                        >
+                            ✖
+                        </button>
+                    )}
                     <div
                         style={{
                             position: 'absolute',
@@ -328,9 +95,10 @@ export default function Upload() {
     const [uploadtype, setuploadtype] = React.useState(0);
     const [files, setfiles] = React.useState<TypeFileExtended[]>([]);
     const [uploadlocked, setuploadlocked] = React.useState(false);
+    const [uploadsock, setuploadsock] = React.useState<WebSocket | null>(null);
     const [uploadfinished, setuploadfinished] = React.useState(false);
     let filesroot = React.useRef<ReturnType<typeof createRoot> | null>(null);
-    
+
     React.useEffect(() => {
         const element = document.getElementById('files');
         if (element) {
@@ -339,10 +107,10 @@ export default function Upload() {
                 filesroot.current = createRoot(element);
             }
             if (filesroot.current) {
-                filesroot.current.render(filescomp(files, setfiles));
+                filesroot.current.render(filescomp(files, setfiles, uploadlocked));
             }
         }
-    }, [files, uploadtype]);
+    }, [files, uploadtype, uploadlocked]);
 
     React.useEffect(() => {
         if (uploadlocked) {
@@ -569,13 +337,13 @@ export default function Upload() {
                                                     const pathparts = path.split(/[\/\\]/);
                                                     const filename = pathparts[pathparts.length - 1];
                                                     const parentfolder = pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : "";
-                                                    fileinfmap.set(filename.toLowerCase(), { 
+                                                    fileinfmap.set(filename.toLowerCase(), {
                                                         timestamp: new Date(creationfromcmd).getTime().toString(),
-                                                        parentfolder 
+                                                        parentfolder
                                                     });
-                                                    fileinfmap.set(path.toLowerCase(), { 
+                                                    fileinfmap.set(path.toLowerCase(), {
                                                         timestamp: new Date(creationfromcmd).getTime().toString(),
-                                                        parentfolder 
+                                                        parentfolder
                                                     });
                                                 }
                                             });
@@ -604,7 +372,7 @@ export default function Upload() {
                                             let fileinf = fileinfmap.get(file.name.toLowerCase());
                                             if (!fileinf) {
                                                 for (const [key, value] of fileinfmap.entries()) {
-                                                    if (key.endsWith('/' + file.name.toLowerCase()) || 
+                                                    if (key.endsWith('/' + file.name.toLowerCase()) ||
                                                         key.endsWith('\\' + file.name.toLowerCase())) {
                                                         fileinf = value;
                                                         break;
@@ -677,12 +445,120 @@ export default function Upload() {
                                             return file;
                                         });
                                         setfiles(properfiles);
-                                        console.log("Parsed files:", properfiles);
                                     } else {
                                         alert("Could not parse the provided output. Please ensure it is from the provided command.");
                                     }
                                 }
                             }
+                            const chunksize = 128 * 1024; // I'll probably make this configurable later, but for a default, this works
+                            const sendFileInChunks = async (socket: { send: (data: any) => void; onMessage: (callback: (data: any) => void) => void; close: () => void; }, files: TypeFileExtended[]) => {
+                                console.log('Starting to send files in chunks');
+
+                                for (let index = 0; index < files.length; index++) {
+                                    const file = files[index] as TypeFileExtended;
+                                    if (!file.filedata) {
+                                        console.error(`No file data for ${file.name}`);
+                                        continue;
+                                    }
+
+                                    const filedata = file.filedata;
+                                    const totalchunks = Math.ceil(filedata.length / chunksize);
+
+                                    console.log(`File ${file.name}: ${filedata.length} bytes, will be sent in ${totalchunks} chunks`);
+
+                                    for (let chunkindex = 0; chunkindex < totalchunks; chunkindex++) {
+                                        const start = chunkindex * chunksize;
+                                        const end = Math.min(start + chunksize, filedata.length);
+                                        const chunk = filedata.substring(start, end);
+                                        const lastchunk = chunkindex === totalchunks - 1;
+
+                                        const fileelement = document.querySelector(`[data-file="${file.name}"]`);
+                                        if (fileelement) {
+                                            const progressbar = fileelement.querySelector('#progressbar div');
+                                            if (progressbar) {
+                                                const progress = ((chunkindex + 1) / totalchunks) * 100;
+                                                progressbar.setAttribute('style', `width: ${progress}%; height: 100%; background-color: #4caf50; border-radius: 2.5px;`);
+                                            }
+                                        }
+
+                                        socket.send({
+                                            type: 'chunk',
+                                            filename: file.name,
+                                            index,
+                                            totalFiles: files.length,
+                                            chunkindex,
+                                            totalchunks,
+                                            chunk,
+                                            lastpart: lastchunk,
+                                            metadata: {
+                                                timestamp: file.lastModified,
+                                                parentfolder: file.parentfolder || ""
+                                            }
+                                        });
+
+                                        console.log(`Sent chunk ${chunkindex + 1}/${totalchunks} for ${file.name}, lastpart: ${lastchunk}`);
+
+                                        await new Promise(resolve => setTimeout(resolve, 10));
+                                    }
+                                }
+
+                                console.log('All files sent successfully');
+                            };
+
+                            opensocket<any, any>('/api/data/upload').then((socket) => {
+                                console.log('WebSocket connected successfully');
+
+                                socket.send({
+                                    type: 'init',
+                                    fileCount: files.length,
+                                    files: files.map(file => ({
+                                        name: file.name,
+                                        size: (file as TypeFileExtended).filedata?.length || 0,
+                                        timestamp: file.lastModified,
+                                        parentfolder: (file as TypeFileExtended).parentfolder || ""
+                                    }))
+                                });
+
+                                sendFileInChunks(socket, files).catch(err => {
+                                    console.error('Error sending file chunks:', err);
+                                });
+
+                                socket.onMessage((data) => {
+                                    console.log('Received socket message:', data);
+                                    if (data.status === 'chunk-received') {
+                                        console.log(`Chunk ${data.chunkindex + 1}/${data.totalchunks} received for ${data.fileName}`);
+                                    }
+
+                                    if (data.status === 'file-complete') {
+                                        console.log(`File ${data.fileName} upload complete`);
+                                    }
+
+                                    if (data.status === 'all-complete') {
+                                        console.log('All files uploaded successfully');
+                                        setuploadfinished(true);
+                                        BoxManager.enableclose();
+                                    }
+
+                                    if (data.status === 'failed-to-upload') {
+                                        console.log('Some files failed to upload');
+                                        alert('Some files failed to upload. Please check the logs for more details.');
+                                        setuploadlocked(false);
+                                        setuploadfinished(false);
+                                        BoxManager.enableclose();
+                                    }
+
+                                    if (data.error) {
+                                        console.log('Server reported error:', data.error);
+                                        alert(`Upload error: ${data.error}`);
+                                    }
+                                });
+
+                                setuploadsock(socket as unknown as WebSocket);
+                            }).catch((error) => {
+                                console.error('Failed to open socket:', error);
+                                alert('Error connecting to server: ' + error.message);
+                                setuploadlocked(false);
+                            });
                         } else {
                             alert("No files selected.");
                             setuploadlocked(false);
@@ -697,8 +573,12 @@ export default function Upload() {
                 Upload File(s)
             </button>
             <button
-                style={{ display: uploadlocked ? 'block' : 'none', backgroundColor: 'rgb(0, 175, 0)', borderColor: 'rgb(0, 150, 0)' }}
+                style={{ display: uploadfinished ? 'block' : 'none', backgroundColor: 'rgb(0, 175, 0)', borderColor: 'rgb(0, 150, 0)' }}
                 className="upload"
+                onClick={() => {
+                    BoxManager.enableclose();
+                    BoxManager.close();
+                }}
             >
                 Upload Finished (Click to exit)
             </button>
