@@ -26,6 +26,7 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
             totalchunks: number,
             metadata: any
         }> = {};
+        const backupid = Date.now().toString();
 
         console.log('[SOCKET] Client connected to /api/data/upload');
         client.send(JSON.stringify({ message: '[SOCKET] Hello at /api/data/upload!' }));
@@ -42,11 +43,13 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                     }));
                 }
                 if (data.type === 'init') {
-                    console.log(`[SOCKET] Initializing upload for ${data.count} files`);
+                    console.log(`[SOCKET] Initialising upload for ${data.count} files`);
                     client.send(JSON.stringify({
-                        status: 'init-received',
+                        status: 'gotinit',
                         message: `Ready to receive ${data.count} files`
                     }));
+                    const dir = join(process.cwd(), 'data', 'backups', backupid);
+                    await fs.promises.mkdir(dir, { recursive: true });
                     return;
                 }
                 if (data.type === 'chunk') {
@@ -70,7 +73,7 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                     chunks[filename].receivedchunks++;
                     console.log(`[SOCKET] Received chunk ${chunkindex + 1}/${totalchunks} for ${filename}, lastpart: ${lastpart}`);
                     client.send(JSON.stringify({
-                        status: 'chunk-received',
+                        status: 'chunk',
                         filename,
                         chunkindex,
                         totalchunks
@@ -86,19 +89,19 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                         };
 
                         try {
-                            const dir = join(process.cwd(), 'data', 'backups', Date.now().toString());
+                            const dir = join(process.cwd(), 'data', 'backups', backupid);
                             await fs.promises.mkdir(dir, { recursive: true });
                             const path = join(dir, `${filename}.json`);
                             await writeFile(path, JSON.stringify(filedata, null, 2), 'utf-8');
                             client.send(JSON.stringify({
-                                status: 'file-complete',
+                                status: 'filecomplete',
                                 filename
                             }));
                             delete chunks[filename];
                             if (Object.keys(chunks).length === 0) {
                                 console.log('[SOCKET] All files uploaded successfully');
                                 client.send(JSON.stringify({
-                                    status: 'all-complete',
+                                    status: 'complete',
                                     success: true
                                 }));
                             }
@@ -110,7 +113,7 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                             if (Object.keys(chunks).length === 0) {
                                 console.log('[SOCKET] Some files failed to upload');
                                 client.send(JSON.stringify({
-                                    status: 'failed-to-upload',
+                                    status: 'uploadfailed',
                                     success: false
                                 }));
                             }

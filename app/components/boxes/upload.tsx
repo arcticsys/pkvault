@@ -450,7 +450,7 @@ export default function Upload() {
                                     }
                                 }
                             }
-                            const chunksize = 128 * 1024; // I'll probably make this configurable later, but for a default, this works
+                            const chunksize = process.env.CHUNKSIZE ? process.env.CHUNKSIZE as unknown as number : 128 * 1024;
                             const sendFileInChunks = async (socket: { send: (data: any) => void; onMessage: (callback: (data: any) => void) => void; close: () => void; }, files: TypeFileExtended[]) => {
                                 console.log('Starting to send files in chunks');
 
@@ -525,21 +525,21 @@ export default function Upload() {
 
                                 socket.onMessage((data) => {
                                     console.log('Received socket message:', data);
-                                    if (data.status === 'chunk-received') {
+                                    if (data.status === 'chunk') {
                                         console.log(`Chunk ${data.chunkindex + 1}/${data.totalchunks} received for ${data.fileName}`);
                                     }
 
-                                    if (data.status === 'file-complete') {
+                                    if (data.status === 'filecomplete') {
                                         console.log(`File ${data.fileName} upload complete`);
                                     }
 
-                                    if (data.status === 'all-complete') {
+                                    if (data.status === 'complete') {
                                         console.log('All files uploaded successfully');
                                         setuploadfinished(true);
                                         BoxManager.enableclose();
                                     }
 
-                                    if (data.status === 'failed-to-upload') {
+                                    if (data.status === 'uploadfailed') {
                                         console.log('Some files failed to upload');
                                         alert('Some files failed to upload. Please check the logs for more details.');
                                         setuploadlocked(false);
