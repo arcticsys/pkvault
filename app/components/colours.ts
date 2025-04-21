@@ -102,7 +102,7 @@ export function getuploadtypecolour(type: 'file' | 'folder' | 'ftp', isSelected:
     if (isSelected) {
         return typecolours.selected;
     }
-    
+
     if (isHovered) {
         return typecolours.hover;
     }

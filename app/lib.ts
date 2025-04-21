@@ -43,7 +43,7 @@ export async function opensocket<TInput, TOutput>(url: string) {
             socket.onopen = () => {
                 console.log('[Client/SOCKET] WebSocket connection opened successfully');
                 clearTimeout(timeout);
-                
+
                 resolve({
                     send: (data: TInput) => {
                         try {

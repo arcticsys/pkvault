@@ -7,7 +7,7 @@ import Upload from './boxes/upload';
 
 const Sidebar: React.FC = () => {
     const pathname = usePathname();
-    
+
     const navItems = [
         { name: ' Home', path: '/' },
         { name: '󰩪 Vault', path: '/vault' },

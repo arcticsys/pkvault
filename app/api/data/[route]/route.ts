@@ -20,11 +20,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
 export async function SOCKET(client: import('ws').WebSocket, request: import('http').IncomingMessage, server: import('ws').WebSocketServer, { params }: { params: Promise<{ route: string }> }) {
     const { route } = await params;
     if (route === 'upload') {
-        const chunks: Record<string, { 
+        const chunks: Record<string, {
             chunks: string[],
             receivedchunks: number,
             totalchunks: number,
-            metadata: any 
+            metadata: any
         }> = {};
 
         console.log('[SOCKET] Client connected to /api/data/upload');
@@ -50,13 +50,13 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                     return;
                 }
                 if (data.type === 'chunk') {
-                    const { 
+                    const {
                         filename,
                         chunkindex,
                         totalchunks,
-                        chunk, 
-                        lastpart, 
-                        metadata 
+                        chunk,
+                        lastpart,
+                        metadata
                     } = data;
                     if (!chunks[filename]) {
                         chunks[filename] = {
@@ -69,11 +69,11 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                     chunks[filename].chunks[chunkindex] = chunk;
                     chunks[filename].receivedchunks++;
                     console.log(`[SOCKET] Received chunk ${chunkindex + 1}/${totalchunks} for ${filename}, lastpart: ${lastpart}`);
-                    client.send(JSON.stringify({ 
-                        status: 'chunk-received', 
-                        filename, 
-                        chunkindex, 
-                        totalchunks 
+                    client.send(JSON.stringify({
+                        status: 'chunk-received',
+                        filename,
+                        chunkindex,
+                        totalchunks
                     }));
                     if (lastpart || chunks[filename].receivedchunks === totalchunks) {
                         console.log(`[SOCKET] All chunks received for ${filename}, assembling file`);
@@ -84,34 +84,34 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                             timestamp: chunks[filename].metadata.timestamp,
                             parentfolder: chunks[filename].metadata.parentfolder
                         };
-                        
+
                         try {
                             const dir = join(process.cwd(), 'data', 'backups', Date.now().toString());
                             await fs.promises.mkdir(dir, { recursive: true });
                             const path = join(dir, `${filename}.json`);
                             await writeFile(path, JSON.stringify(filedata, null, 2), 'utf-8');
-                            client.send(JSON.stringify({ 
-                                status: 'file-complete', 
-                                filename 
+                            client.send(JSON.stringify({
+                                status: 'file-complete',
+                                filename
                             }));
                             delete chunks[filename];
                             if (Object.keys(chunks).length === 0) {
                                 console.log('[SOCKET] All files uploaded successfully');
-                                client.send(JSON.stringify({ 
-                                    status: 'all-complete', 
-                                    success: true 
+                                client.send(JSON.stringify({
+                                    status: 'all-complete',
+                                    success: true
                                 }));
                             }
                         } catch (error) {
                             console.error(`[SOCKET] Error saving file ${filename}:`, error);
-                            client.send(JSON.stringify({ 
-                                error: `[SOCKET] Failed to save file ${filename}: ${error}` 
+                            client.send(JSON.stringify({
+                                error: `[SOCKET] Failed to save file ${filename}: ${error}`
                             }));
                             if (Object.keys(chunks).length === 0) {
                                 console.log('[SOCKET] Some files failed to upload');
-                                client.send(JSON.stringify({ 
-                                    status: 'failed-to-upload', 
-                                    success: false 
+                                client.send(JSON.stringify({
+                                    status: 'failed-to-upload',
+                                    success: false
                                 }));
                             }
                         }
@@ -119,14 +119,14 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                     return;
                 }
                 console.warn('[SOCKET] Received unknown message type:', data.type);
-                client.send(JSON.stringify({ 
-                    error: `[SOCKET] Unknown message type: ${data.type}` 
+                client.send(JSON.stringify({
+                    error: `[SOCKET] Unknown message type: ${data.type}`
                 }));
-                
+
             } catch (error) {
                 console.error('[SOCKET] Failed to process message:', error);
-                client.send(JSON.stringify({ 
-                    error: '[SOCKET] Failed to process message: ' + error 
+                client.send(JSON.stringify({
+                    error: '[SOCKET] Failed to process message: ' + error
                 }));
             }
         });
