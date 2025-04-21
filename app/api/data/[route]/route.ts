@@ -22,7 +22,7 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
     if (route === 'upload') {
         const chunks: Record<string, { 
             chunks: string[],
-            receivedChunks: number,
+            receivedchunks: number,
             totalchunks: number,
             metadata: any 
         }> = {};
@@ -61,13 +61,13 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                     if (!chunks[filename]) {
                         chunks[filename] = {
                             chunks: new Array(totalchunks),
-                            receivedChunks: 0,
+                            receivedchunks: 0,
                             totalchunks,
                             metadata
                         };
                     }
                     chunks[filename].chunks[chunkindex] = chunk;
-                    chunks[filename].receivedChunks++;
+                    chunks[filename].receivedchunks++;
                     console.log(`[SOCKET] Received chunk ${chunkindex + 1}/${totalchunks} for ${filename}, lastpart: ${lastpart}`);
                     client.send(JSON.stringify({ 
                         status: 'chunk-received', 
@@ -75,7 +75,7 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                         chunkindex, 
                         totalchunks 
                     }));
-                    if (lastpart || chunks[filename].receivedChunks === totalchunks) {
+                    if (lastpart || chunks[filename].receivedchunks === totalchunks) {
                         console.log(`[SOCKET] All chunks received for ${filename}, assembling file`);
                         const finishedfile = chunks[filename].chunks.join('');
                         const filedata = {
