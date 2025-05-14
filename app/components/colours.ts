@@ -74,7 +74,7 @@ export const uploadtypecolours = {
     }
 };
 
-export function getgencolour(generation: number, isSelected: boolean, isHovered: boolean): string {
+export function getgencolour(generation: number, isSelected: boolean = false, isHovered: boolean = false): string {
     const gencolours = generationcolours[generation];
 
     if (!gencolours) {

@@ -4,7 +4,17 @@ export type TypeFileExtended = File & {
     filedata?: string;
     generation?: number;
     error?: string;
+    hash?: string;
+    status: number;
 };
+
+export async function gethash(data: string): Promise<string> {
+    const msg = new TextEncoder().encode(data);
+    const hashbuf = await crypto.subtle.digest('SHA-256', msg);
+    const hasharr = Array.from(new Uint8Array(hashbuf));
+    const hash = hasharr.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hash;
+}
 
 export async function sendrequest(url: string, method: string, content: string | null) {
     const response = await fetch(url, {
@@ -31,6 +41,7 @@ export async function opensocket<TInput, TOutput>(url: string) {
     return new Promise<{
         send: (data: TInput) => void;
         onMessage: (callback: (data: TOutput) => void) => void;
+        onClose: (callback: (event: CloseEvent) => void) => void;
         close: () => void;
     }>((resolve, reject) => {
         try {
@@ -41,7 +52,6 @@ export async function opensocket<TInput, TOutput>(url: string) {
             }, 10000);
 
             socket.onopen = () => {
-                console.log('[Client/SOCKET] WebSocket connection opened successfully');
                 clearTimeout(timeout);
 
                 resolve({
@@ -70,8 +80,13 @@ export async function opensocket<TInput, TOutput>(url: string) {
                             }
                         };
                     },
+                    onClose: (callback: (event: CloseEvent) => void) => {
+                        socket.onclose = (event) => {
+                            console.log('[Client/SOCKET] WebSocket connection closed');
+                            callback(event);
+                        };
+                    },
                     close: () => {
-                        console.log('[Client/SOCKET] Closing WebSocket connection');
                         socket.close();
                     },
                 });
@@ -81,10 +96,6 @@ export async function opensocket<TInput, TOutput>(url: string) {
                 console.error('[Client/SOCKET] WebSocket error:', error);
                 clearTimeout(timeout);
                 reject(new Error('[Client/SOCKET] WebSocket error'));
-            };
-
-            socket.onclose = (event) => {
-                console.log(`[Client/SOCKET] WebSocket connection closed: Code: ${event.code}, Reason: ${event.reason}`);
             };
         } catch (err) {
             console.error('[Client/SOCKET] Error creating WebSocket:', err);

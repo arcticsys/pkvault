@@ -70,7 +70,7 @@ export const BoxManager = {
                 const innerbox = box.querySelector('#inner-box');
                 const closeButton = document.createElement('button');
                 closeButton.id = 'close-box-button';
-                closeButton.innerText = '✖';
+                closeButton.innerText = '';
                 closeButton.style.position = 'absolute';
                 closeButton.style.top = '10px';
                 closeButton.style.right = '10px';
@@ -219,7 +219,7 @@ const Box: React.FC<BoxProps> = ({ fetchComponent }) => {
                             }}
                             id="close-box-button"
                         >
-                            ✖
+                            
                         </button>
                         <div style={{ padding: '16px' }}>{content}</div>
                     </div>
