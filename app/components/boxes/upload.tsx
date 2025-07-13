@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BoxManager } from '../box';
-import { TypeFileExtended, opensocket, gethash } from '@/app/lib';
+import { TypeFileExtended, opensocket, gethash, sendrequest } from '@/app/lib';
 import { createRoot } from 'react-dom/client';
 import { getgencolour, getuploadtypecolour } from '../colours';
 
@@ -92,13 +92,35 @@ function filescomp(files: TypeFileExtended[], setfiles: React.Dispatch<React.Set
     );
 }
 
+function updatebars(files: TypeFileExtended[]) {
+    files.forEach(file => {
+        const fileelement = document.querySelector(`[data-file="${file.name}"]`);
+        if (fileelement) {
+            const progressbar = fileelement.querySelector('#progressbar div');
+            if (progressbar) {
+                if (file.status === 1) {
+                    progressbar.setAttribute('style', `width: 0%; height: 100%; background-color: #FF0000; border-radius: 2.5px;`);
+                } else if (file.status === 2) {
+                    progressbar.setAttribute('style', `width: 100%; height: 100%; background-color: #4caf50; border-radius: 2.5px;`);
+                } else if (file.status === 0) {
+                    progressbar.setAttribute('style', `width: 0%; height: 100%; background-color: #444; border-radius: 2.5px;`);
+                } else if (typeof file.status === 'number' && file.status > 2) {
+                    progressbar.setAttribute('style', `width: ${file.status - 2}%; height: 100%; background-color: #4caf50; border-radius: 2.5px;`);
+                }
+            }
+        }
+    });
+}
+
 export default function Upload() {
     const [uploadtype, setuploadtype] = React.useState(0);
     const [files, setfiles] = React.useState<TypeFileExtended[]>([]);
     const [uploadlocked, setuploadlocked] = React.useState(false);
     const [uploadsock, setuploadsock] = React.useState<WebSocket | null>(null);
     const [uploadfinished, setuploadfinished] = React.useState(false);
+    const [serenitystatus, setserenitystatus] = React.useState<Boolean | null>(null);
     let filesroot = React.useRef<ReturnType<typeof createRoot> | null>(null);
+    let uploaderrors = React.useRef<string | null>(null);
 
     React.useEffect(() => {
         const element = document.getElementById('files');
@@ -121,10 +143,45 @@ export default function Upload() {
         }
     }, [uploadlocked]);
 
+    React.useEffect(() => {
+        if (serenitystatus === true) return;
+        const checkserenity = () => {
+            sendrequest('/api/data/serenity', 'GET', null)
+                .then((response) => {
+                    if (response.status === 200) {
+                        setserenitystatus(true);
+                    } else {
+                        setserenitystatus(false);
+                    }
+                })
+                .catch((error) => {
+                    console.error('[Client/Upload] Failed to check servers connection with Serenity:', error);
+                    setserenitystatus(false);
+                });
+        };
+        checkserenity();
+        const interval = setInterval(() => {
+            if (serenitystatus !== true) {
+                checkserenity();
+            }
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [serenitystatus]);
+
+    React.useEffect(() => {
+        updatebars(files);
+    }, [files]);
+
     return (
         <div>
             <h1>Upload Save(s)</h1>
             <div style={{ display: uploadlocked ? 'none' : 'block' }}>It's highly recommended to use FTP as you'll get accurate times displayed in your vault</div>
+            {serenitystatus === null && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px' }}>Checking connection with Serenity...</div>
+            )}
+            {serenitystatus === false && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', color: 'red'}}>Serenity is offline. Perhaps the server is still starting?</div>
+            )}
             {!uploadlocked && (
                 <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', padding: '0px', whiteSpace: 'nowrap' }}>
                     <button
@@ -225,6 +282,7 @@ export default function Upload() {
                                             type: file.type,
                                             webkitRelativePath: file.webkitRelativePath,
                                             status: 0,
+                                            file: file,
                                         }));
                                         setfiles(efiles as TypeFileExtended[]);
                                     }
@@ -270,6 +328,7 @@ export default function Upload() {
                                         type: file.type,
                                         webkitRelativePath: file.webkitRelativePath,
                                         status: 0,
+                                        file: file,
                                     }));
                                     setfiles(efiles as TypeFileExtended[]);
                                 }
@@ -306,7 +365,8 @@ export default function Upload() {
             )}
             <button
                 className="upload"
-                onClick={() => {
+                onClick={async () => {
+                    uploaderrors.current = null;
                     setuploadlocked(true);
                     if (uploadtype !== 3) {
                         if ((uploadtype === 1 || uploadtype === 2) && files.length > 0) {
@@ -331,6 +391,7 @@ export default function Upload() {
                                     if (output.trim() === "") {
                                         parsedfiles = files.map((file) => {
                                             const fileextended = file as TypeFileExtended;
+                                            fileextended.file = file;
                                             fileextended.timestamp = file.lastModified.toString();
                                             if (file.webkitRelativePath) {
                                                 const pathparts = file.webkitRelativePath.split('/');
@@ -386,6 +447,7 @@ export default function Upload() {
                                         }
                                         parsedfiles = files.map(file => {
                                             const fileextended = file as TypeFileExtended;
+                                            fileextended.file = file;
                                             let fileinf = fileinfmap.get(file.name.toLowerCase());
                                             if (!fileinf) {
                                                 for (const [key, value] of fileinfmap.entries()) {
@@ -450,38 +512,45 @@ export default function Upload() {
                                 }
                             }
 
-                            files.forEach(file => {
-                                const cf = new File(
-                                    [file],
-                                    file.name || '',
-                                    {
-                                        type: file.type || '',
-                                        lastModified: file.lastModified
+                            const getdata = async () => {
+                                for (const file of files) {
+                                    const readablefile = file.file;
+                                    if (!readablefile) {
+                                        console.error(`[Client/Upload] No file object for ${file.name}`);
+                                        file.status = 1;
+                                        file.error = "Missing file data";
+                                        continue;
                                     }
-                                );
-
-                                const reader = new FileReader();
-                                reader.onload = async () => {
-                                    const buf = reader.result as ArrayBuffer;
-                                    const u8arr = new Uint8Array(buf);
-                                    let binstr = '';
-                                    for (let i = 0; i < u8arr.length; i += 1024) {
-                                        binstr += String.fromCharCode.apply(
-                                            null,
-                                            u8arr.subarray(i, i + 1024) as unknown as number[]
+                                    const retfiledata = (file: File, callback: any) => {
+                                        let reader = new FileReader();
+                                        reader.readAsDataURL(file);
+                                        reader.onload = function() {
+                                            callback(reader.result);
+                                        };
+                                        reader.onerror = function(error) {
+                                            console.log('Error converting file to base64:', error);
+                                        };
+                                    };
+                                    try {
+                                        retfiledata(readablefile as File, async (result: string) => {
+                                                const base64: string = (result as string).split(',')[1];
+                                                const hash: string = await gethash(base64);
+                                                Object.assign(file, {
+                                                    filedata: base64,
+                                                    hash: hash,
+                                                    status: 0
+                                                });
+                                            }
                                         );
+                                    } catch (error) {
+                                        console.error(`[Client/Upload] Error processing file ${file.name}:`, error);
+                                        file.status = 1;
+                                        file.error = (error instanceof Error) ? error.message : String(error);
                                     }
-                                    const b64 = btoa(binstr);
-                                    const hash = await gethash(b64);
-
-                                    Object.assign(file, {
-                                        filedata: b64,
-                                        hash: hash,
-                                        status: 0
-                                    });
-                                };
-                                reader.readAsArrayBuffer(cf);
-                            });
+                                }
+                                return;
+                            };
+                            await getdata();
 
                             console.log(files);
 
@@ -508,14 +577,9 @@ export default function Upload() {
                                         const chunk = filedata.substring(start, end);
                                         const lastchunk = chunkindex === totalchunks - 1;
 
-                                        const fileelement = document.querySelector(`[data-file="${file.name}"]`);
-                                        if (fileelement) {
-                                            const progressbar = fileelement.querySelector('#progressbar div');
-                                            if (progressbar) {
-                                                const progress = ((chunkindex + 1) / totalchunks) * 100;
-                                                progressbar.setAttribute('style', `width: ${progress}%; height: 100%; background-color: #4caf50; border-radius: 2.5px;`);
-                                            }
-                                        }
+                                        const progress = ((chunkindex + 1) / totalchunks) * 100;
+                                        file.status = 2 + progress;
+                                        setfiles([...files]);
 
                                         socket.send({
                                             type: 'chunk',
@@ -536,6 +600,8 @@ export default function Upload() {
 
                                         await new Promise(resolve => setTimeout(resolve, 10));
                                     }
+                                    file.status = 2;
+                                    setfiles([...files]);
                                 }
                             };
                             let complete = false;
@@ -560,19 +626,12 @@ export default function Upload() {
 
                                         sendinchunks(socket, files).catch(err => {
                                             console.error('[Client/SOCKET] Error sending file chunks:', err);
-                                            const fileelements = document.querySelectorAll('[data-file]');
-                                            fileelements.forEach((fileelement) => {
-                                                const progressbar = fileelement.querySelector('#progressbar div');
-                                                if (progressbar) {
-                                                    progressbar.setAttribute('style', `width: 0%; height: 100%; background-color: transparent; border-radius: 2.5px;`);
-                                                    files.forEach(file => {
-                                                        file.status = 1;
-                                                    });
-                                                    setfiles(files);
-                                                }
+                                            files.forEach(file => {
+                                                file.status = 1;
                                             });
+                                            setfiles(files);
                                             socket.close();
-                                            alert('Error sending file chunks: ' + err.message);
+                                            uploaderrors.current = uploaderrors.current + `\n[Client/SOCKET] Error sending file chunks: ${err.message}`;
                                             setuploadlocked(false);
                                             setuploadfinished(false);
                                             BoxManager.enableclose();
@@ -599,18 +658,20 @@ export default function Upload() {
                                                 }, 100);
                                             }
 
-                                            if (data.status === 'uploadfailed') {
-                                                console.log('[Client/SOCKET] Some files failed to upload');
-                                                alert('[Client/SOCKET] Some files failed to upload. Please check the logs for more details.');
-                                                socket.close();
-                                                setuploadlocked(false);
-                                                setuploadfinished(false);
-                                                BoxManager.enableclose();
+                                            if (data.status === 'uploadfailed' && data.error) {
+                                                uploaderrors.current = uploaderrors.current + `\n${data.error}`;
                                             }
 
                                             if (data.error) {
-                                                console.log('[Client/SOCKET] Server reported error:', data.error);
-                                                alert(`[Client/SOCKET] Upload error: ${data.error}`);
+                                                console.log('[Client/SOCKET] Server reported error: "', data.error + '"');
+                                                if (data.filename) {
+                                                    const file = files.find(f => f.name === data.filename);
+                                                    if (file) {
+                                                        file.status = 1;
+                                                    }
+                                                    setfiles(files);
+                                                }
+                                                uploaderrors.current = uploaderrors.current + `\n[Client/SOCKET] Upload error: "${data.error}"`;
                                             }
                                         });
                                     }
@@ -622,13 +683,24 @@ export default function Upload() {
                                         setuploadlocked(false);
                                         setuploadfinished(false);
                                         BoxManager.enableclose();
+                                    } else if (files.some(file => file.status === 1)) {
+                                        console.log('[Client/SOCKET] Not all files successfully uploaded.');
+                                        if (uploaderrors.current && uploaderrors.current.length > 0) {
+                                            let cleaned = uploaderrors.current.trim().replace(/^null\s*/i, '').trim();
+                                            uploaderrors.current = cleaned.length > 0 ? cleaned : null;
+                                            console.log(uploaderrors.current);
+                                            alert(uploaderrors.current);
+                                        }
+                                        setuploadlocked(false);
+                                        setuploadfinished(false);
+                                        BoxManager.enableclose();
                                     }
                                 });
 
                                 setuploadsock(socket as unknown as WebSocket);
                             }).catch((error) => {
-                                console.error('Failed to open socket:', error);
-                                alert('Error connecting to server: ' + error.message);
+                                console.error('[Client/SOCKET] Failed to open socket:', error);
+                                alert('[Client/SOCKET] Error connecting to server: ' + error.message);
                                 setuploadlocked(false);
                             });
                         } else {

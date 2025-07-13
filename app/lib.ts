@@ -6,7 +6,42 @@ export type TypeFileExtended = File & {
     error?: string;
     hash?: string;
     status: number;
+    file?: File;
 };
+
+export type PokemonSpeciesName = {
+    0: string; // Hacked or Gen 5 Japanese trade, we'll just assume an English origin, and maybe let the user later change it if it is from a trade? (Route this to Name 2)
+    1: string; // Japanese (日本語)
+    2: string; // English (US/UK/AU)
+    3: string; // French (Français)
+    4: string; // Italian (Italiano)
+    5: string; // German (Deutsch)
+    6: string; // Unused, expect this to be blank, or maybe it'll be used in future games. Who knows? (Route this to Name 2)
+    7: string; // Spanish (Español)
+    8: string; // Korean (한국어)
+    9: string; // Chinese Simplified (简体中文)
+    10: string; // Chinese Traditional (繁體中文)
+}
+
+export function dvstoivs(dvs: number[]): number[] {
+    return [1]; // placeholder, copilot should replace this
+}
+
+export function canwedogotolgpe(speciesid: number, form: number): boolean {
+    if (((speciesid >= 1 && speciesid <= 151) || speciesid === 808 || speciesid === 809) && speciesid !== 151) {
+        const alolanspecies = [19, 20, 26, 27, 28, 37, 38, 50, 51, 52, 53, 74, 75, 76, 88, 89, 103, 105];
+        if (alolanspecies.includes(speciesid)) {
+            if (form === 0 || form === 1) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
 
 export async function gethash(data: string): Promise<string> {
     const msg = new TextEncoder().encode(data);
@@ -25,10 +60,10 @@ export async function sendrequest(url: string, method: string, content: string |
         body: content,
     });
     if (!response.ok) {
-        throw new Error('[Client/' + method + '] ' + await response.text());
+        return Error('[Client/' + method + '] ' + await response.text());
     }
     const jsonResponse = await response.json();
-   return jsonResponse;
+    return jsonResponse;
 };
 
 export async function opensocket<TInput, TOutput>(url: string) {
