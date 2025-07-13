@@ -2,35 +2,45 @@
   "name": "dev.arctic.pkvault",
   "description": "Immutable Pokémon storage for Gens I to IX",
   "version": "0.1.0",
+  "license": "OQL-1.2",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "prepare": "next-ws patch",
-    "dev:reimage": "echo \"You must type exactly 'I agree.' to continue.\" && echo \"This will delete your database containing ALL of your PKVault index data (not Pokémon save data).\" && read -p \"Confirmation: \" confirm && [ \"$confirm\" = \"I agree.\" ] && rm ./data/data.* ; prisma generate && prisma db push --force-reset || echo \"Aborted: User didn't agree.\"",
+    "update": "git pull origin master; git submodule update --init --recursive; git submodule foreach git submodule update --init --recursive; bun x next-ws patch; bun x prisma generate; bun x prisma migrate deploy; bun x prisma db push; bun upgrade; bun install; bun pm trust --all",
+    "dev:reimage": "echo \"You must type exactly 'I agree.' to continue.\" && echo \"This will delete your database containing ALL of your PKVault index data (not Pokémon save data).\" && read -p \"Confirmation: \" confirm && if [ \"$confirm\" = \"I agree.\" ]; then rm ./data/data.* && bun x prisma generate && bun x prisma db push --force-reset; else echo \"Aborted: User didn't agree.\"; fi",
     "dev:serenity": "cd serenity && dotnet watch run ./serenity.csproj"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.4",
-    "ldrs": "^1.1.6",
+    "@tailwindcss/postcss": "^4.1.11",
+    "ldrs": "^1.1.7",
     "next": "15.1.7",
-    "next-ws": "^2.0.6",
-    "prisma": "^6.6.0",
+    "next-ws": "^2.0.10",
+    "prisma": "^6.11.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "ws": "^8.18.1"
+    "ws": "^8.18.3",
+    "bun": "^1.2.18"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "eslint": "^9.25.1",
+    "@types/node": "^24.0.13",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "eslint": "^9.31.0",
     "eslint-config-next": "15.1.7",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3"
   },
-  "packageManager": "bun@1.2.10"
+  "packageManager": "bun@1.2.14",
+  "trustedDependencies": [
+    "@prisma/engines",
+    "@tailwindcss/oxide",
+    "bun",
+    "prisma",
+    "sharp"
+  ]
 }

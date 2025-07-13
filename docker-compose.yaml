@@ -1,0 +1,15 @@
+services:
+  serenity:
+    image: serenity
+    build:
+      context: .
+      dockerfile: Serenity.Dockerfile
+    command: ["dotnet", "watch", "run", "./serenity.csproj"]
+    working_dir: /app
+    volumes:
+      - ./serenity:/app
+    ports:
+      - "5008:5008"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
