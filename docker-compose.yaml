@@ -13,3 +13,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - DOTNET_USE_POLLING_FILE_WATCHER=true
+    dns:
+      - "1.1.1.1"
+      - "1.0.0.1"

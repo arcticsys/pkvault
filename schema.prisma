@@ -1,37 +1,48 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./data/data.db"
+    provider = "sqlite"
+    url      = "file:./data/data.db"
 }
 
 model Pokemon {
-  id          String          @id @unique @default(uuid())
-  data        Bytes
-  generation  Int
-  speciesId   Int
-  speciesName String
-  nickname    String?
-  level       Int
-  saveId      String
-  extractedAt DateTime
-  save        Save            @relation(fields: [saveId, extractedAt], references: [id, extractedAt], name: "originalSave")
-  group       PokemonGroups[] @relation("pokemonGroup")
+    id            String         @id @unique @default(uuid())
+    data          Bytes          
+    generation    Int            
+    speciesid     Int            
+    species       Json           
+    nickname      String?        
+    gender        Int            
+    exp           Int            
+    evs           Json           
+    ivs           Json           
+    type          String         
+    ot            String         
+    hometracker   String?        
+    language      Int            @default(2)
+    sourcepath    String?        
+    saveid        String?        
+    legal         Boolean        @default(true)
+    legalreason   String?        
+    timestamp     DateTime       @default(now())
+    extractedtime DateTime       @default(now())
+    save          Save?          @relation(fields: [saveid], references: [id], name: "ogsave")
+    group         PokemonGroup[] @relation("pkmgroup")
 }
 
 model Save {
-  id          String    @id @unique @default(uuid())
-  data        Bytes
-  filePath    String    @unique
-  extractedAt DateTime  @default(now())
-  pokemon     Pokemon[] @relation("originalSave")
-
-  @@unique([id, extractedAt])
+    id            String         @id @unique @default(uuid())
+    data          Bytes          
+    filepath      String         @unique
+    timestamp     DateTime       @default(now())
+    extractedtime DateTime       @default(now())
+    pokemon       Pokemon[]      @relation("ogsave")
 }
 
-model PokemonGroups {
-  id      String    @id @unique @default(uuid())
-  pokemon Pokemon[] @relation("pokemonGroup")
+model PokemonGroup {
+    id            String         @id @unique @default(uuid())
+    timestamp     DateTime       @default(now())
+    pokemon       Pokemon[]      @relation("pkmgroup")
 }

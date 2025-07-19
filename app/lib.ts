@@ -23,19 +23,11 @@ export type PokemonSpeciesName = {
     10: string; // Chinese Traditional (繁體中文)
 }
 
-export function dvstoivs(dvs: number[]): number[] {
-    return [1]; // placeholder, copilot should replace this
-}
-
 export function canwedogotolgpe(speciesid: number, form: number): boolean {
     if (((speciesid >= 1 && speciesid <= 151) || speciesid === 808 || speciesid === 809) && speciesid !== 151) {
         const alolanspecies = [19, 20, 26, 27, 28, 37, 38, 50, 51, 52, 53, 74, 75, 76, 88, 89, 103, 105];
         if (alolanspecies.includes(speciesid)) {
-            if (form === 0 || form === 1) {
-                return true;
-            } else {
-                return false;
-            }
+            return form === 0 || form === 1;
         } else {
             return true;
         }
@@ -47,11 +39,10 @@ export async function gethash(data: string): Promise<string> {
     const msg = new TextEncoder().encode(data);
     const hashbuf = await crypto.subtle.digest('SHA-256', msg);
     const hasharr = Array.from(new Uint8Array(hashbuf));
-    const hash = hasharr.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hash;
+    return hasharr.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function sendrequest(url: string, method: string, content: string | null) {
+export async function sendrequest(url: string, method: string, content?: string | null) {
     const response = await fetch(url, {
         method,
         headers: {
@@ -62,9 +53,8 @@ export async function sendrequest(url: string, method: string, content: string |
     if (!response.ok) {
         return Error('[Client/' + method + '] ' + await response.text());
     }
-    const jsonResponse = await response.json();
-    return jsonResponse;
-};
+    return await response.json();
+}
 
 export async function opensocket<TInput, TOutput>(url: string) {
     const properurl = url.startsWith('ws://') || url.startsWith('wss://')
@@ -137,4 +127,54 @@ export async function opensocket<TInput, TOutput>(url: string) {
             reject(new Error('[Client/SOCKET] Failed to create WebSocket: ' + err));
         }
     });
+}
+
+export function getnativename(species: PokemonSpeciesName, language: number): string {
+    let targetlang = language;
+
+    if (targetlang === 0 || targetlang === 6) {
+        targetlang = 2;
+    }
+
+    const name = species[targetlang as keyof PokemonSpeciesName];
+
+    if (!name || name.trim() === '') {
+        return species[2] || 'Unknown';
+    }
+
+    return name;
+}
+
+export function getlanguagename(languageindex: number): string {
+    const languages: { [key: number]: string } = {
+        0: 'Hacked/Unknown',
+        1: '日本語',
+        2: 'English',
+        3: 'Français',
+        4: 'Italiano',
+        5: 'Deutsch',
+        6: 'Unused',
+        7: 'Español',
+        8: '한국어',
+        9: '简体中文',
+        10: '繁體中文'
+    };
+    return languages[languageindex] || 'Unknown';
+}
+
+export function getlanguageflag(languageindex: number): string {
+    const flags: { [key: number]: string } = {
+        0: '❓',
+        1: '🇯🇵',
+        2: '🇬🇧',
+        3: '🇫🇷',
+        4: '🇮🇹',
+        5: '🇩🇪',
+        6: '❓',
+        7: '🇪🇸',
+        8: '🇰🇷',
+        9: '🇨🇳',
+        10: '🇹🇼'
+    };
+    return flags[languageindex] || '❓';
 }

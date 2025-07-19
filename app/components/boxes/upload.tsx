@@ -104,7 +104,7 @@ function updatebars(files: TypeFileExtended[]) {
                     progressbar.setAttribute('style', `width: 100%; height: 100%; background-color: #4caf50; border-radius: 2.5px;`);
                 } else if (file.status === 0) {
                     progressbar.setAttribute('style', `width: 0%; height: 100%; background-color: #444; border-radius: 2.5px;`);
-                } else if (typeof file.status === 'number' && file.status > 2) {
+                } else if (file.status > 2) {
                     progressbar.setAttribute('style', `width: ${file.status - 2}%; height: 100%; background-color: #4caf50; border-radius: 2.5px;`);
                 }
             }
@@ -116,7 +116,6 @@ export default function Upload() {
     const [uploadtype, setuploadtype] = React.useState(0);
     const [files, setfiles] = React.useState<TypeFileExtended[]>([]);
     const [uploadlocked, setuploadlocked] = React.useState(false);
-    const [uploadsock, setuploadsock] = React.useState<WebSocket | null>(null);
     const [uploadfinished, setuploadfinished] = React.useState(false);
     const [serenitystatus, setserenitystatus] = React.useState<Boolean | null>(null);
     let filesroot = React.useRef<ReturnType<typeof createRoot> | null>(null);
@@ -270,13 +269,14 @@ export default function Upload() {
                             onClick={() => {
                                 const input = document.createElement('input');
                                 input.type = 'file';
-                                input.setAttribute('accept', 'main, .pkm, .pkx, .sav, .pk1, .pk2, .pk3, .pk4, .pk5, .pk6, .pk7, .pk8, .pk9, .pkmn');
+                                // this got commented out because some file managers dont understand that "main" means a file named "main" ...
+                                //input.setAttribute('accept', 'main, .pkm, .pkx, .sav, .pk1, .pk2, .pk3, .pk4, .pk5, .pk6, .pk7, .pk8, .pk9, .pkmn');
                                 input.setAttribute('acceptlabel', 'Pokémon files');
                                 input.onchange = (event) => {
                                     const files = (event.target as HTMLInputElement).files;
                                     if (files) {
                                         const efiles = Array.from(files).map(file => ({
-                                            name: file.name,
+                                            name: file.webkitRelativePath ? file.webkitRelativePath : file.name,
                                             lastModified: file.lastModified,
                                             size: file.size,
                                             type: file.type,
@@ -322,7 +322,7 @@ export default function Upload() {
                                         return;
                                     }
                                     const efiles = Array.from(files).map(file => ({
-                                        name: file.name,
+                                        name: file.webkitRelativePath ? file.webkitRelativePath : file.name,
                                         lastModified: file.lastModified,
                                         size: file.size,
                                         type: file.type,
@@ -395,9 +395,15 @@ export default function Upload() {
                                             fileextended.timestamp = file.lastModified.toString();
                                             if (file.webkitRelativePath) {
                                                 const pathparts = file.webkitRelativePath.split('/');
-                                                fileextended.parentfolder = pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : "";
+                                                Object.defineProperty(fileextended, "parentfolder", {
+                                                    value: pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : "",
+                                                    writable: true,
+                                                });
                                             } else {
-                                                fileextended.parentfolder = "";
+                                                Object.defineProperty(fileextended, "parentfolder", {
+                                                    value: "",
+                                                    writable: true,
+                                                });
                                             }
                                             return fileextended;
                                         });
@@ -459,15 +465,30 @@ export default function Upload() {
                                                 }
                                             }
                                             if (fileinf) {
-                                                fileextended.timestamp = fileinf.timestamp;
-                                                fileextended.parentfolder = fileinf.parentfolder;
+                                                Object.defineProperty(fileextended, "lastModified", {
+                                                    value: parseInt(fileinf.timestamp),
+                                                    writable: true,
+                                                });
+                                                Object.defineProperty(fileextended, "parentfolder", {
+                                                    value: fileinf.parentfolder,
+                                                    writable: true,
+                                                });
                                             } else {
-                                                fileextended.timestamp = file.lastModified.toString();
+                                                Object.defineProperty(fileextended, "timestamp", {
+                                                    value: file.lastModified.toString(),
+                                                    writable: true,
+                                                });
                                                 if (file.webkitRelativePath) {
                                                     const pathparts = file.webkitRelativePath.split('/');
-                                                    fileextended.parentfolder = pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : "";
+                                                    Object.defineProperty(fileextended, "parentfolder", {
+                                                        value: pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : "",
+                                                        writable: true,
+                                                    });
                                                 } else {
-                                                    fileextended.parentfolder = "";
+                                                    Object.defineProperty(fileextended, "parentfolder", {
+                                                        value: "",
+                                                        writable: true,
+                                                    });
                                                 }
                                             }
                                             return fileextended;
@@ -493,9 +514,15 @@ export default function Upload() {
                                                 if (!parsedfile.parentfolder || parsedfile.parentfolder === "") {
                                                     try {
                                                         const pathparts = file.webkitRelativePath.split('/');
-                                                        parsedfile.parentfolder = pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : "";
+                                                        Object.defineProperty(file, "parentfolder", {
+                                                            value: pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : "",
+                                                            writable: true,
+                                                        });
                                                     } catch (e) {
-                                                        parsedfile.parentfolder = "";
+                                                        Object.defineProperty(file, "parentfolder", {
+                                                            value: "",
+                                                            writable: true,
+                                                        });
                                                     }
                                                 }
                                                 Object.defineProperty(file, "parentfolder", {
@@ -580,7 +607,7 @@ export default function Upload() {
                                         const progress = ((chunkindex + 1) / totalchunks) * 100;
                                         file.status = 2 + progress;
                                         setfiles([...files]);
-
+                                        const pathparts = file.webkitRelativePath ? file.webkitRelativePath.split('/') : [];
                                         socket.send({
                                             type: 'chunk',
                                             filename: file.name,
@@ -592,7 +619,7 @@ export default function Upload() {
                                             lastpart: lastchunk,
                                             metadata: {
                                                 timestamp: file.lastModified,
-                                                parentfolder: file.parentfolder || ""
+                                                parentfolder: file.parentfolder || (pathparts.length > 1 ? pathparts.slice(0, -1).join('/') : ""),
                                             }
                                         });
 
@@ -696,8 +723,6 @@ export default function Upload() {
                                         BoxManager.enableclose();
                                     }
                                 });
-
-                                setuploadsock(socket as unknown as WebSocket);
                             }).catch((error) => {
                                 console.error('[Client/SOCKET] Failed to open socket:', error);
                                 alert('[Client/SOCKET] Error connecting to server: ' + error.message);

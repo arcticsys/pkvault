@@ -11,6 +11,8 @@ const Sidebar: React.FC = () => {
     const nav = [
         { name: ' Home', path: '/' },
         { name: '󰩪 Vault', path: '/vault' },
+        { name: '󱘎 Evolution', path: '/evolution' },
+        { name: '󰆓 Backups', path: '/backups' },
     ];
 
     const bottom = [
@@ -18,13 +20,13 @@ const Sidebar: React.FC = () => {
     ];
 
     return (
-        <div className="w-[200px] h-screen bg-gray-800 text-white p-4 flex flex-col items-center" style={{ backgroundColor: '#101010', position: 'fixed', top: 0, bottom: 0 }}>
-            <div className="text-xl mb-6" style={{ marginTop: '5px', marginBottom: '5px' }}>󰩪 PKVault</div>
+        <div className="w-[200px] h-screen bg-gray-800 text-white p-4 flex flex-col items-center" style={{ backgroundColor: '#101010', position: 'fixed', top: 0, bottom: 0, padding: 0 }}>
+            <div className="text-xl mb-6" style={{ marginTop: '5px', marginBottom: '5px' }}>󱉽 PKVault</div>
             <nav className="w-full mt-4">
                 <ul className="w-full space-y-2">
                     {nav.map((item, index) => (
                         <li key={index} className="w-full">
-                            <Link href={item.path} className={`block w-full p-2 rounded border text-center mb-1 ${ pathname === item.path ? 'bg-blue-600 border-blue-600' : 'hover:bg-gray-700 border-gray-600' }`} style={{ marginBottom: '5px', borderRadius: '3px', border: '1px solid #AAA' }}>
+                            <Link href={item.path} className={`block w-full p-2 rounded border text-center mb-1 ${ pathname === item.path ? 'bg-blue-600 border-blue-600' : 'hover:bg-gray-700 border-gray-600' }`} style={{ marginBottom: '5px', borderRadius: '3px', border: '1px solid #AAA', paddingTop: '5px', paddingBottom: '5px' }}>
                                 {item.name}
                             </Link>
                         </li>

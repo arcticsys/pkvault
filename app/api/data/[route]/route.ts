@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prismaClient } from '../../databases';
+import { handlesave, storepokemon, extractpokemonfromsave, getindexsummary, searchpokemon, generatepokemongroups, getpokemongroups, getpokemongroup } from '../../handle';
 import * as fs from 'fs';
 import path from 'path';
 import { gethash } from '@/app/lib';
@@ -8,10 +8,57 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
     const { route } = await params;
     if (route === 'overview') {
         try {
-            const count = await prismaClient.pokemon.count();
-            return NextResponse.json({ count }, { status: 200 });
+            const summary = await getindexsummary();
+            return NextResponse.json(summary, { status: 200 });
         } catch (error) {
             console.error(`[Server/GET] Error fetching overview:`, error);
+            return NextResponse.json({ error: '[Server/GET] Failed to fetch overview' }, { status: 500 });
+        }        } else if (route === 'search') {
+        try {
+            const url = new URL(req.url);
+            const speciesid = url.searchParams.get('speciesid');
+            const generation = url.searchParams.get('generation');
+            const legal = url.searchParams.get('legal');
+            const nickname = url.searchParams.get('nickname');
+            const ot = url.searchParams.get('ot');
+
+            const filters: any = {};
+            if (speciesid) filters.speciesid = parseInt(speciesid);
+            if (generation) filters.generation = parseInt(generation);
+            if (legal !== null) filters.legal = legal === 'true';
+            if (nickname) filters.nickname = nickname;
+            if (ot) filters.ot = ot;
+
+            const results = await searchpokemon(filters);
+            return NextResponse.json({ pokemon: results }, { status: 200 });
+        } catch (error) {
+            console.error(`[Server/GET] Error searching Pokemon:`, error);
+            return NextResponse.json({ error: '[Server/GET] Failed to search Pokemon' }, { status: 500 });
+        }
+    } else if (route === 'evolution') {
+        try {
+            const groups = await getpokemongroups();
+            return NextResponse.json({ groups }, { status: 200 });
+        } catch (error) {
+            console.error(`[Server/GET] Error getting Pokemon evolution data:`, error);
+            return NextResponse.json({ error: '[Server/GET] Failed to get Pokemon evolution data' }, { status: 500 });
+        }
+    } else if (route === 'generatetrees') {
+        try {
+            const result = await generatepokemongroups();
+            return NextResponse.json(result, { status: 200 });
+        } catch (error) {
+            console.error(`[Server/GET] Error creating Pokemon evolution data:`, error);
+            return NextResponse.json({ error: '[Server/GET] Failed to create Pokemon evolution data' }, { status: 500 });
+        }
+    } else if (route.startsWith('evolution-')) {
+        try {
+            const groupid = route.replace('evolution-', '');
+            const group = await getpokemongroup(groupid);
+            return NextResponse.json(group, { status: 200 });
+        } catch (error) {
+            console.error(`[Server/GET] Error fetching Pokemon evolution:`, error);
+            return NextResponse.json({ error: '[Server/GET] Failed to fetch Pokemon evolution' }, { status: 500 });
         }
     } else if (route === 'serenity') {
         try {
@@ -77,8 +124,7 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                                         receivedchunks: 0,
                                         totalchunks: 0,
                                         metadata: {
-                                            timestamp: file.timestamp,
-                                            parentfolder: file.parentfolder || ""
+                                            timestamp: file.timestamp
                                         },
                                         hash: file.hash
                                     };
@@ -215,256 +261,94 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                             name: filename,
                             data: finishedfile,
                             timestamp: chunks[filename].metadata.timestamp,
-                            parentfolder: chunks[filename].metadata.parentfolder,
                             hash: chunks[filename].hash || await gethash(finishedfile),
-                            properdir: chunks[filename].metadata.parentfolder
-                                ? path.join(chunks[filename].metadata.parentfolder, filename)
-                                : filename
+                            properdir: filename
                         };
-
                         try {
                             const dir = path.join(process.cwd(), 'data', 'backups', backupid);
                             await fs.promises.mkdir(dir, { recursive: true });
                             const filepath = path.join(dir, filedata.properdir);
                             await fs.promises.mkdir(path.dirname(filepath), { recursive: true });
-                            await fs.promises.writeFile(filepath, JSON.stringify(filedata, null, 2), 'utf-8');
-                            fetch(`http://${serenityh}:${serenityp}/api/savedata`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    savedata: finishedfile,
-                                })
-                            }).then(async res => {
-                                if (res.status === 200) {
-                                    if (areweindev) {
-                                        console.log(`[Server/SOCKET] File ${filename} parsed successfully via /api/savedata`);
-                                    }
-                                    res.json().then(out => {
-                                        if (areweindev) {
-                                            console.log('[Server/SOCKET] Response body (/api/savedata):', out);
-                                        }
-                                        if (!out.error) {
-                                            client.send(JSON.stringify({
-                                                status: 'filecomplete',
-                                                filename
-                                            }));
-                                            delete chunks[filename];
-                                            if (Object.keys(chunks).length === 0) {
-                                                if (areweindev) {
-                                                    console.log('[Server/SOCKET] All files uploaded successfully');
-                                                }
-                                                client.send(JSON.stringify({
-                                                    status: 'complete',
-                                                    success: true
-                                                }));
-                                            }
-                                        } else {
-                                            if (areweindev) {
-                                                console.error(`[Server/SOCKET] Serenity error: ${out.error}`);
-                                            }
-                                            client.send(JSON.stringify({
-                                                error: `[Server/SOCKET] Serenity error: ${out.error}`,
-                                                filename
-                                            }));
-                                            if (Object.keys(chunks).length === 1) {
-                                                client.send(JSON.stringify({
-                                                    status: 'uploadfailed',
-                                                    success: false
-                                                }));
-                                            }
-                                        }
-                                    }).catch(err => {
-                                        if (areweindev) {
-                                            console.error(`[Server/SOCKET] Failed to parse JSON response (/api/savedata): ${err}`);
-                                        }
-                                        client.send(JSON.stringify({
-                                            error: `[Server/SOCKET] Failed to parse JSON response (/api/savedata): ${err}`,
-                                            filename
-                                        }));
-                                        if (Object.keys(chunks).length === 1) {
-                                            client.send(JSON.stringify({
-                                                status: 'uploadfailed',
-                                                success: false
-                                            }));
-                                        }
-                                    });
-                                } else {
-                                    const text = await res.text();
-                                    if (areweindev) {
-                                        console.error(`[Server/SOCKET] Response body (/api/savedata): ${text}`);
-                                    }
-                                    if (text === '{"error":"Invalid save file format"}') {
-                                        fetch(`http://${serenityh}:${serenityp}/api/pkmdata`, {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify({
-                                                pkmdata: finishedfile,
-                                            })
-                                        }).then(async res => {
-                                            if (res.status === 200) {
-                                                if (areweindev) {
-                                                    console.log(`[Server/SOCKET] File ${filename} parsed successfully`);
-                                                }
-                                                res.json().then(out => {
-                                                    if (areweindev) {
-                                                        console.log('[Server/SOCKET] Response body (/api/pkmdata):', out);
-                                                    }
-                                                    if (!out.error) {
-                                                        client.send(JSON.stringify({
-                                                            status: 'filecomplete',
-                                                            filename
-                                                        }));
-                                                        delete chunks[filename];
-                                                        if (Object.keys(chunks).length === 0) {
-                                                            if (areweindev) {
-                                                                console.log('[Server/SOCKET] All files uploaded successfully');
-                                                            }
-                                                            client.send(JSON.stringify({
-                                                                status: 'complete',
-                                                                success: true
-                                                            }));
-                                                        }
-                                                    } else {
-                                                        client.send(JSON.stringify({
-                                                            error: `[Server/SOCKET] Serenity error: ${out.error}`,
-                                                            filename
-                                                        }));
-                                                        if (Object.keys(chunks).length === 1) {
-                                                            client.send(JSON.stringify({
-                                                                status: 'uploadfailed',
-                                                                success: false
-                                                            }));
-                                                        }
-                                                    }
-                                                }).catch(err => {
-                                                    if (areweindev) {
-                                                        console.error(`[Server/SOCKET] Failed to parse JSON response (/api/pkmdata): ${err}`);
-                                                    }
-                                                    client.send(JSON.stringify({
-                                                        error: `[Server/SOCKET] Failed to parse JSON response (/api/pkmdata): ${err}`,
-                                                        filename
-                                                    }));
-                                                    if (Object.keys(chunks).length === 1) {
-                                                        client.send(JSON.stringify({
-                                                            status: 'uploadfailed',
-                                                            success: false
-                                                        }));
-                                                    }
-                                                });
-                                            } else if (res.status === 400) {
-                                                const text2 = await res.text();
-                                                if (areweindev) {
-                                                    console.log(`[Server/SOCKET] Response body (/api/pkmdata): ${text2}`);
-                                                    console.log(`[Server/SOCKET] File ${filename} is not a valid Save/PKM file, giving up...`);
-                                                }
-                                                client.send(JSON.stringify({
-                                                    error: `[Server/SOCKET] File ${filename} is not a valid Save/PKM file`,
-                                                    filename
-                                                }));
-                                                if (Object.keys(chunks).length === 1) {
-                                                    client.send(JSON.stringify({
-                                                        status: 'uploadfailed',
-                                                        success: false
-                                                    }));
-                                                }
-                                            } else {
-                                                if (areweindev) {
-                                                    console.error(`[Server/SOCKET] Failed to parse file ${filename} (/api/pkmdata): ${res.status} ${res.statusText}`);
-                                                }
-                                                res.text().then(statustext => {
-                                                    if (areweindev) {
-                                                        console.error(`[Server/SOCKET] Response body (/api/pkmdata): ${res.status} ${res.statusText}`);
-                                                        console.log(`[Server/SOCKET] Giving up on parsing ${filename}`);
-                                                    }
-                                                    client.send(JSON.stringify({
-                                                        error: `[Server/SOCKET] Failed to parse file ${filename} (/api/pkmdata): ${res.status} ${res.statusText}`,
-                                                        filename
-                                                    }));
-                                                    if (Object.keys(chunks).length === 1) {
-                                                        client.send(JSON.stringify({
-                                                            status: 'uploadfailed',
-                                                            success: false
-                                                        }));
-                                                    }
-                                                }).catch(err => {
-                                                    if (areweindev) {
-                                                        console.error(`[Server/SOCKET] Failed to parse response body (/api/pkmdata): ${err}`);
-                                                        console.log(`[Server/SOCKET] Giving up on parsing ${filename}`);
-                                                    }
-                                                    client.send(JSON.stringify({
-                                                        error: `[Server/SOCKET] Failed to parse response body (/api/pkmdata): ${err}`,
-                                                        filename
-                                                    }));
-                                                    if (Object.keys(chunks).length === 1) {
-                                                        client.send(JSON.stringify({
-                                                            status: 'uploadfailed',
-                                                            success: false
-                                                        }));
-                                                    }
-                                                });
-                                            }
-                                        }).catch(err => {
-                                            if (areweindev) {
-                                                console.error(`[Server/SOCKET] Error during request to /api/pkmdata for ${filename}:`, err);
-                                                console.log(`[Server/SOCKET] Giving up on parsing ${filename} due to network error.`);
-                                            }
-                                            client.send(JSON.stringify({
-                                                error: `[Server/SOCKET] Error during request to /api/pkmdata for ${filename}: ${err}`,
-                                                filename
-                                            }));
-                                            if (Object.keys(chunks).length === 1) {
-                                                client.send(JSON.stringify({
-                                                    status: 'uploadfailed',
-                                                    success: false
-                                                }));
-                                            }
-                                        });
-                                    } else {
-                                        if (areweindev) {
-                                            console.log(`[Server/SOCKET] Giving up on parsing ${filename} (/api/savedata): ${res.status} ${res.statusText}`);
-                                        }
-                                        client.send(JSON.stringify({
-                                            error: `[Server/SOCKET] Failed to parse file ${filename} (/api/savedata): ${res.status} ${res.statusText}`,
-                                            filename
-                                        }));
-                                        if (Object.keys(chunks).length === 1) {
-                                            client.send(JSON.stringify({
-                                                status: 'uploadfailed',
-                                                success: false
-                                            }));
-                                        }
-                                    }
-                                }
-                            }).catch(err => {
+                            const filecontents = Buffer.from(filedata.data, 'base64');
+                            await fs.promises.writeFile(filepath, filecontents, 'binary');
+                            if (areweindev) {
+                                console.log(`[Server/SOCKET] Processing file ${filename} for database indexing`);
+                            }
+                            try {
+                                const { save, saveinfo } = await handlesave(finishedfile, filedata.properdir, new Date(), filedata.timestamp ? new Date(filedata.timestamp) : new Date());
                                 if (areweindev) {
-                                    console.error(`[Server/SOCKET] Error while saving file ${filename}:`, err);
+                                    console.log(`[Server/SOCKET] Save ${filename} indexed successfully with ID: ${save.id}`);
+                                }
+                                const extractedpokemon = await extractpokemonfromsave(saveinfo, save.id, save.timestamp, new Date(), filedata.properdir, filedata.timestamp ? new Date(filedata.timestamp) : new Date());
+                                if (areweindev) {
+                                    console.log(`[Server/SOCKET] Extracted ${extractedpokemon.length} Pokemon from save ${filename}`);
                                 }
                                 client.send(JSON.stringify({
-                                    error: `[Server/SOCKET] Error while saving file ${filename}: ${err}`,
-                                    filename
+                                    status: 'filecomplete',
+                                    filename,
+                                    indexed: true,
+                                    saveid: save.id,
+                                    pokemoncount: extractedpokemon.length
                                 }));
+                                delete chunks[filename];
                                 if (Object.keys(chunks).length === 0) {
+                                    if (areweindev) {
+                                        console.log('[Server/SOCKET] All files uploaded and indexed successfully');
+                                    }
                                     client.send(JSON.stringify({
-                                        status: 'uploadfailed',
-                                        success: false
+                                        status: 'complete',
+                                        success: true
                                     }));
                                 }
-                            });
-                            delete chunks[filename];
-                            /*delete chunks[filename];
-                            if (Object.keys(chunks).length === 0) {
-                                if (areweindev) {
-                                    console.log('[Server/SOCKET] All files uploaded successfully');
+                            } catch (saveprocessingerror) {
+                                if (saveprocessingerror instanceof Error && saveprocessingerror.message === 'NOT_SAVE_FILE') {
+                                    if (areweindev) {
+                                        console.log(`[Server/SOCKET] File ${filename} is not a save file, trying as individual Pokemon file`);
+                                    }
+                                } else {
+                                    if (areweindev) {
+                                        console.log(`[Server/SOCKET] Save processing failed for ${filename}, trying as individual Pokemon file`);
+                                    }
                                 }
-                                client.send(JSON.stringify({
-                                    status: 'complete',
-                                    success: true
-                                }));
-                            }*/
+                                try {
+                                    const pokemon = await storepokemon(finishedfile, null, filedata.timestamp, new Date(), filedata.properdir, filedata.timestamp ? new Date(filedata.timestamp) : new Date());
+                                    if (areweindev) {
+                                        console.log(`[Server/SOCKET] Pokemon file ${filename} indexed successfully with ID: ${pokemon.id}`);
+                                    }
+                                    client.send(JSON.stringify({
+                                        status: 'filecomplete',
+                                        filename,
+                                        indexed: true,
+                                        pokemonid: pokemon.id,
+                                        ispokemonfile: true
+                                    }));
+                                    delete chunks[filename];
+                                    if (Object.keys(chunks).length === 0) {
+                                        if (areweindev) {
+                                            console.log('[Server/SOCKET] All files uploaded and indexed successfully');
+                                        }
+                                        client.send(JSON.stringify({
+                                            status: 'complete',
+                                            success: true
+                                        }));
+                                    }
+                                } catch (pokemonprocessingerror) {
+                                    if (areweindev) {
+                                        console.error(`[Server/SOCKET] Failed to process ${filename} as either save or Pokemon file:`, pokemonprocessingerror);
+                                    }
+                                    client.send(JSON.stringify({
+                                        error: `[Server/SOCKET] Failed to process file ${filename}: not a valid save or Pokemon file`,
+                                        filename
+                                    }));
+                                    delete chunks[filename];
+                                    if (Object.keys(chunks).length === 0) {
+                                        client.send(JSON.stringify({
+                                            status: 'uploadfailed',
+                                            success: false
+                                        }));
+                                    }
+                                }
+                            }
                         } catch (error) {
                             if (areweindev) {
                                 console.error(`[Server/SOCKET] Error saving file ${filename}:`, error);
@@ -498,7 +382,6 @@ export async function SOCKET(client: import('ws').WebSocket, request: import('ht
                 }));
             }
         });
-
         client.on('close', () => {
             if (areweindev) {
                 console.log('[Server/SOCKET] Client disconnected from /api/data/upload');
