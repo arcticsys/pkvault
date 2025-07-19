@@ -352,7 +352,7 @@ export async function createpokemongroups() {
         }
 
         const createdgroups = [];
-        for (const [pokemonlist] of groupmap) {
+        for (const [_groupkey, pokemonlist] of groupmap) {
             if (pokemonlist.length > 1) {
                 const group = await prismaClient.pokemonGroup.create({
                     data: {
