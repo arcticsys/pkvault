@@ -1,7 +1,7 @@
 {
   "name": "dev.arctic.pkvault",
   "description": "Immutable Pokémon storage for Gens I to IX",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "OQL-1.2",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "lint": "next lint",
     "prepare": "next-ws patch; prisma generate; prisma migrate deploy; prisma db push; bun pm trust --all",
     "update": "git pull origin master; git submodule update --init --recursive; git submodule foreach git submodule update --init --recursive; bun x next-ws patch; bun x prisma generate; bun x prisma migrate deploy; bun x prisma db push; bun upgrade; bun install; bun pm trust --all",
-    "dev:reimage": "echo \"You must type exactly 'I agree.' to continue.\" && echo \"This will delete your database containing ALL of your PKVault index data (not Pokémon save data).\" && read -p \"Confirmation: \" confirm && if [ \"$confirm\" = \"I agree.\" ]; then rm ./data/data.* || true && bun x prisma generate && bun x prisma db push --force-reset; else echo \"Aborted: User didn't agree.\"; fi",
+    "dev:reimage": "echo \"You must type exactly 'I agree.' to continue.\" && echo \"This will delete your database containing ALL of your PKVault index data (not Pokémon save data) and remake it - if you have made any edits, they will be deleted irreversably.\" && read -p \"Confirmation: \" confirm && if [ \"$confirm\" = \"I agree.\" ]; then rm ./data/data.* || true && bun x prisma generate && bun x prisma db push --force-reset && bun run ./util/util-reindex.ts ; else echo \"Aborted: User didn't agree.\"; fi",
     "dev:serenity": "cd serenity && dotnet watch run ./serenity.csproj"
   },
   "dependencies": {

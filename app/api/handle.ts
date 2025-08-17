@@ -96,6 +96,7 @@ async function processqueue(): Promise<void> {
                         body: JSON.stringify({ pkmdata: pokemondata })
                     })
                 ])
+                if (pkmdataresponse.status === 422) throw new Error('NOT_PKM_FILE')
                 if (pkmdataresponse.status !== 200) throw new Error(`Serenity (pkmdata) parsing failed: ${pkmdataresponse.status}`)
                 const [pkminfo, legalityinfo] = await Promise.all([
                     pkmdataresponse.json(),
@@ -135,7 +136,7 @@ async function processqueue(): Promise<void> {
                     spdef: pkminfo.IV_SPD || 0,
                     speed: pkminfo.IV_SPE || 0
                 }
-                const legalreasons = legalityinfo.reasons?.filter((r: any) => !r.valid)?.map((r: any) => `${r.identifier}: ${r.comment}`)?.join('; ') || null
+                const legalreasons = legalityinfo.reasons?.filter((r: any) => !r.valid)?.map((r: any) => `${r.identifier}: ${r.comment}`)?.join(' ; ') || null
                 const result = await prismaClient.pokemon.create({
                     data: {
                         data: Buffer.from(pokemondata, 'base64'),
@@ -161,8 +162,11 @@ async function processqueue(): Promise<void> {
                 })
                 resolve(result)
             } catch (error) {
-                console.error("[Server/Database] Error storing Pokemon:", error)
-                reject(error)
+                if (error instanceof Error && error.message === 'NOT_PKM_FILE') reject(error)
+                else {
+                    console.error("[Server/Database] Error storing Pokemon:", error)
+                    reject(error)
+                }
             }
         }
     }
@@ -327,57 +331,6 @@ export async function searchpokemon(filters: {
         }));
     } catch (error) {
         console.error("[Server/Database] Error searching Pokemon:", error);
-        throw error;
-    }
-}
-
-export async function createpokemongroups() {
-    try {
-        const allpokemon = await prismaClient.pokemon.findMany({
-            include: {
-                save: true
-            }
-        });
-
-        const groupmap = new Map<string, any[]>();
-
-        for (const pokemon of allpokemon) {
-            const ivs = pokemon.ivs as any;
-            const groupkey = `${pokemon.speciesid}-${pokemon.gender}-${ivs.hp}-${ivs.attack}-${ivs.defense}-${ivs.spatk}-${ivs.spdef}-${ivs.speed}-${pokemon.ot}`;
-
-            if (!groupmap.has(groupkey)) {
-                groupmap.set(groupkey, []);
-            }
-            groupmap.get(groupkey)!.push(pokemon);
-        }
-
-        const createdgroups = [];
-        for (const [_groupkey, pokemonlist] of groupmap) {
-            if (pokemonlist.length > 1) {
-                const group = await prismaClient.pokemonGroup.create({
-                    data: {
-                        pokemon: {
-                            connect: pokemonlist.map(p => ({ id: p.id }))
-                        }
-                    },
-                    include: {
-                        pokemon: {
-                            include: {
-                                save: true
-                            },
-                            orderBy: {
-                                timestamp: 'asc'
-                            }
-                        }
-                    }
-                });
-                createdgroups.push(group);
-            }
-        }
-
-        return createdgroups;
-    } catch (error) {
-        console.error("[Server/Database] Error creating Pokemon groups:", error);
         throw error;
     }
 }

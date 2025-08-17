@@ -1,7 +1,7 @@
 <h1 align="center">PKVault</h1>
 
 Immutable Pokémon storage for Gens I to IX  
-Made with <3 by Nova  
+Made with <3 by Nova, released by Arctic Systems  
 
 # Usage
 

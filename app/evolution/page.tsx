@@ -249,12 +249,25 @@ export default function PokemonEvolution() {
                                         </div>
                                         <div>
                                             <span className="text-gray-400">Source:</span>
-                                            <div className="truncate">{selectedpokemon.sourcefile}</div>
+                                            <div
+                                                className="truncate hover:whitespace-normal hover:overflow-visible"
+                                                title={selectedpokemon.sourcefile}
+                                                style={{ maxWidth: "100%" }}
+                                            >
+                                                {selectedpokemon.sourcefile}
+                                            </div>
                                         </div>
                                         {selectedpokemon.savetimestamp && (
                                             <div>
                                                 <span className="text-gray-400">Save Timestamp:</span>
-                                                <div>{new Date(selectedpokemon.savetimestamp).toLocaleDateString()}</div>
+                                                <div
+                                                    title={new Date(selectedpokemon.savetimestamp).toLocaleString()}
+                                                    style={{ maxWidth: "100%" }}
+                                                    onMouseEnter={e => (e.currentTarget.textContent = selectedpokemon.savetimestamp ? new Date(selectedpokemon.savetimestamp).toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", year: "numeric", month: "2-digit", day: "2-digit" }) : "")}
+                                                    onMouseLeave={e => (e.currentTarget.textContent = selectedpokemon.savetimestamp ? new Date(selectedpokemon.savetimestamp).toLocaleDateString() : "")}
+                                                >
+                                                    {new Date(selectedpokemon.savetimestamp).toLocaleDateString()}
+                                                </div>
                                             </div>
                                         )}
                                         {!selectedpokemon.legal && selectedpokemon.legalreason && (

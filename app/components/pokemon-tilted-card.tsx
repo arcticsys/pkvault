@@ -124,18 +124,17 @@ export default function PokemonTiltedCard({
         />
 
         <div className="relative h-full flex flex-col">
-          <div className="flex-1 flex items-center justify-center p-4">
+          <div className="flex-1 flex items-center justify-center p-4 min-h-0">
             <img
               src={pokemonimageurl}
               alt={nativename}
               className="max-w-full max-h-full object-contain"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" fill="%23374151"/><circle cx="48" cy="48" r="20" fill="%236B7280"/><circle cx="42" cy="42" r="3" fill="white"/><circle cx="54" cy="42" r="3" fill="white"/><path d="M40 58 Q48 64 56 58" stroke="white" stroke-width="2" fill="none"/></svg>`;
+                (e.target as HTMLImageElement).src = `data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"96\" height=\"96\" viewBox=\"0 0 96 96\"><rect width=\"96\" height=\"96\" fill=\"%23374151\"/><circle cx=\"48\" cy=\"48\" r=\"20\" fill=\"%236B7280\"/><circle cx=\"42\" cy=\"42\" r=\"3\" fill=\"white\"/><circle cx=\"54\" cy=\"42\" r=\"3\" fill=\"white\"/><path d=\"M40 58 Q48 64 56 58\" stroke=\"white\" stroke-width=\"2\" fill=\"none\"/></svg>`;
               }}
             />
           </div>
-
-          <div className="p-3 bg-gray-900 bg-opacity-80">
+          <div className="flex-shrink-0 p-3 bg-gray-900 bg-opacity-80 min-h-[56px] flex flex-col justify-center">
             <div className="flex items-center justify-between mb-1">
               <span className="text-white font-medium text-sm truncate">
                 {displayname}
@@ -175,9 +174,9 @@ export default function PokemonTiltedCard({
               <div className="text-gray-400">
                 Gen {pokemon.generation}
               </div>
-              <div className="text-gray-400">
-                {pokemon.legal ? 'Legal' : 'Illegal'}
-              </div>
+                <div className={pokemon.legal ? "text-green-400" : "text-red-400"}>
+                  {pokemon.legal ? 'Legal' : 'Illegal'}
+                </div>
                 <div className={
                   [
                     "flex",

@@ -158,10 +158,6 @@ export default function Vault() {
                             ))}
                         </div>
 
-                        <div className="text-lg font-semibold mb-4">
-                            Stored {items.length} Pokemon
-                        </div>
-
                         {hasMore && (
                             <div className="flex justify-center mt-6">
                                 <button
